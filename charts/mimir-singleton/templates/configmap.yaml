@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Release.Namespace | quote }}
+  name: {{ include "mimir-singleton.fullname" . }}
+data:
+  mimir.yaml: |
+    {{ .Values.config | nindent 4 }}
