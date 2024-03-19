@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ include "mimir-singleton.fullname" . }}
-data:
-  mimir.yaml: |
-     {{- include "mimir-singleton.calculatedConfig" . | nindent 4 }}
