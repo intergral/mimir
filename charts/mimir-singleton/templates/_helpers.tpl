@@ -60,3 +60,10 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Calculate the config from structured and unstructured text input
+*/}}
+{{- define "mimir-singleton.calculatedConfig" -}}
+{{ tpl (mergeOverwrite (tpl .Values.config . | fromYaml) .Values.structuredConfig | toYaml) . }}
+{{- end -}}

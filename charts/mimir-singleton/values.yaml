@@ -99,7 +99,7 @@ tolerations: []
 
 affinity: {}
 
-config:
+config: |
   multitenancy_enabled: true
   target: all,alertmanager,compactor
 
@@ -113,6 +113,8 @@ config:
 
   ruler_storage:
     backend: local
+    local:
+      directory: /tmp/ruler 
 
   blocks_storage:
     backend: local
@@ -121,6 +123,8 @@ config:
 
   alertmanager_storage:
     backend: local
+    local:
+      path: /tmp/mimir/alertmanager
 
   ingester:
     ring:
@@ -132,6 +136,8 @@ config:
   ruler:
     enable_api: true
     alertmanager_url: http://localhost:9009/alertmanager/
+
+structuredConfig: {}
 
 monitoring:
   enabled: false
