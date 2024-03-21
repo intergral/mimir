@@ -99,45 +99,76 @@ tolerations: []
 
 affinity: {}
 
-config: |
-  multitenancy_enabled: true
-  target: all,alertmanager,compactor
+config:
+  multitenancy_enabled: false
+  config: |
+    multitenancy_enabled: {{ .Values.config.multitenancy_enabled }}
+    target: all,alertmanager,compactor
+  
+    limits:
+      out_of_order_time_window: 10m
+      max_global_series_per_user: 1000000
+      native_histograms_ingestion_enabled: true
+  
+    server:
+      http_listen_port: 9009
+      log_level: error
+  
+    ruler_storage:
+      backend: filesystem
+      filesystem:
+        dir: /tmp/mimir/rules
+  
+    blocks_storage:
+      backend: filesystem
+      bucket_store:
+        sync_dir: /tmp/mimir/tsdb-sync
+      filesystem:
+        dir: /tmp/mimir/data/tsdb
+      tsdb:
+        dir: /tmp/mimir/tsdb
+    
+    compactor:
+      data_dir: /tmp/mimir/compactor
+      sharding_ring:
+        kvstore:
+          store: memberlist
+    
+    distributor:
+      ring:
+        instance_addr: 127.0.0.1
+        kvstore:
+          store: memberlist
+    
+    alertmanager_storage:
+      backend: local
+      local:
+        path: /tmp/mimir/alertmanager
+      web:
+        external_url: {{ .Values.alertManager.external_url }}
+  
+    ingester:
+      ring:
+        instance_addr: 127.0.0.1
+        kvstore:
+          store: memberlist
+        replication_factor: 1
+    
+    store_gateway:
+      sharding_ring:
+        replication_factor: 1
+    
+    frontend:
+      query_result_response_format: protobuf
+  
+    ruler:
+      enable_api: true
+      alertmanager_url: http://localhost:9009/alertmanager/
 
-  limits:
-    out_of_order_time_window: 10m
-    max_global_series_per_user: 1000000
-    native_histograms_ingestion_enabled: true
+  structuredConfig: {}
 
-  server:
-    http_listen_port: 9009
-
-  ruler_storage:
-    backend: local
-    local:
-      directory: /tmp/ruler 
-
-  blocks_storage:
-    backend: local
-    tsdb:
-      dir: /tmp/mimir/tsdb
-
-  alertmanager_storage:
-    backend: local
-    local:
-      path: /tmp/mimir/alertmanager
-
-  ingester:
-    ring:
-      replication_factor: 1
-
-  frontend:
-    query_result_response_format: protobuf
-
-  ruler:
-    enable_api: true
-    alertmanager_url: http://localhost:9009/alertmanager/
-
-structuredConfig: {}
+alertManager:
+  external_url: http://localhost:9009/alertmanager
 
 monitoring:
   enabled: false
