@@ -1,0 +1,133 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "mimir-singleton.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mimir-singleton.labels" . | nindent 4 }}
+  {{- with .Values.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  {{- if .Values.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "mimir-singleton.selectorLabels" . | nindent 6 }}
+  serviceName: {{ template "mimir-singleton.fullname" . }}-headless
+  template:
+    metadata:
+      labels:
+        {{- include "mimir-singleton.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "mimir-singleton.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
+      containers:
+        - args:
+            - --config.file=/conf/mimir.yaml
+            - --runtime-config.file=/runtime-config/overrides.yaml
+          {{- range $key, $value := .Values.extraArgs }}
+          - "-{{ $key }}{{ if $value }}={{ $value }}{{ end }}"
+          {{- end }}
+          image: "{{.Values.image.registry}}/{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          name: mimir
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 10 }}
+          {{- end }}
+          env:
+            {{- with .Values.extraEnv }}
+              {{- toYaml . | nindent 10 }}
+              {{- end }}
+          {{- with .Values.extraEnvFrom }}
+          envFrom:
+            {{- toYaml . | nindent 10 }}
+          {{- end }}
+          volumeMounts:
+          {{- if .Values.extraVolumeMounts -}}
+          {{ toYaml .Values.extraVolumeMounts | nindent 8 }}
+          {{- end }}
+          - mountPath: /conf
+            name: mimir-conf
+          - mountPath: /runtime-config
+            name: mimir-runtime-conf
+          - mountPath: /var/mimir
+            name: storage
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        {{- if .Values.extraVolumes -}}
+          {{ toYaml .Values.extraVolumes | nindent 12 }}
+        {{- end }}
+          - name: mimir-conf
+            configMap:
+              name: {{ include "mimir-singleton.fullname" . }}
+              items:
+                - key: "mimir.yaml"
+                  path: "mimir.yaml"
+          - name: mimir-runtime-conf
+          {{- include "mimir-singleton.runtimeVolume" . | nindent 12 }}
+          {{- if not .Values.persistence.enabled }}
+          - name: storage
+            emptyDir: { }
+          {{- end }}
+  updateStrategy:
+    type: {{- toYaml .Values.updateStrategy | nindent 6 }}
+  {{- if .Values.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: storage
+        annotations: {{- toYaml .Values.persistence.annotations | nindent 10 }}
+      spec:
+        accessModes: {{- toYaml .Values.persistence.accessModes | nindent 10 }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size | quote }}
+        storageClassName: {{ .Values.persistence.storageClassName }}
+        {{- if .Values.persistence.selector }}
+        selector: {{- toYaml .Values.persistence.selector | nindent 10 }}
+        {{- end }}
+  {{- end }}

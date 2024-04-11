@@ -67,3 +67,21 @@ Calculate the config from structured and unstructured text input
 {{- define "mimir-singleton.calculatedConfig" -}}
 {{ tpl (mergeOverwrite (tpl .Values.config.config . | fromYaml) .Values.config.structuredConfig | toYaml) . }}
 {{- end -}}
+
+{{/*
+Renders the overrides config
+*/}}
+{{- define "mimir-singleton.overridesConfig" -}}
+{{ tpl .Values.overrides.overrides . }}
+{{- end -}}
+
+{{/*
+The volume to mount for tempo runtime configuration
+*/}}
+{{- define "mimir-singleton.runtimeVolume" -}}
+configMap:
+  name: {{ tpl .Values.overrides.externalRuntimeConfigName . }}
+  items:
+    - key: "overrides.yaml"
+      path: "overrides.yaml"
+{{- end -}}

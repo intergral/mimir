@@ -26,8 +26,15 @@ serviceAccount:
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: ""
+  automountServiceAccountToken: true
 
+## The update strategy to use when deploying new versions
+updateStrategy: RollingUpdate
+## Annotations for the stateful set
+annotations: {}
+## Annotations for the pod
 podAnnotations: {}
+## Labels for the pod
 podLabels: {}
 
 podSecurityContext: {}
@@ -60,6 +67,30 @@ ingress:
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
+
+## Additional container arguments
+extraArgs: {}
+## -- Environment variables to add, can be in the form of key values, using valueFrom or other kubernetes forms.
+## - name: SOME_ENV
+##   value: some-value
+## - name: SOME_KEY_IN_CONFIG
+##   valueFrom:
+##     configMapKeyRef:
+##       name: some-config
+##       key: KEY_IN_CONFIG
+extraEnv: []
+## -- Environment variables from secrets or configmaps to add to the pod
+## - configMapRef:
+##     name: some-config
+extraEnvFrom: []
+## -- Volume mounts to add
+## - name: extra-volume
+##   mountPath: /mnt/volume
+##   readOnly: true
+##   existingClaim: volume-claim
+extraVolumeMounts: []
+# -- Volumes to add
+extraVolumes: []
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -140,12 +171,14 @@ config:
         kvstore:
           store: memberlist
     
+    alertmanager:
+      web:
+          external_url: {{ .Values.alertManager.external_url }}
+    
     alertmanager_storage:
       backend: local
       local:
         path: /tmp/mimir/alertmanager
-      web:
-        external_url: {{ .Values.alertManager.external_url }}
   
     ingester:
       ring:
@@ -167,8 +200,35 @@ config:
 
   structuredConfig: {}
 
+## The configuration for mimir overrides module
+overrides:
+  ## Configuration is loaded from the secret called 'externalConfigSecretName'.
+  ## If 'useExternalConfig' is true, then the configuration is not generated, just
+  ## consumed.
+  useExternalConfig: false
+  # -- Name of the Secret or ConfigMap that contains the runtime configuration (used for naming even if config is internal).
+  externalRuntimeConfigName: runtime-config
+  overrides: |
+    overrides: {}
+
 alertManager:
   external_url: http://localhost:9009/alertmanager
+
+# Should we use a persistent volume with the pod
+persistence:
+  # Enabled persistent volume
+  enabled: false
+  # Custom annotations to apply to the volume claim
+  annotations: {}
+  # Custom selector to apply to the volume claim
+  selector:
+  ## Optionally set the storage class name, if not set the cluster default will be used
+  storageClassName:
+  ## Set the access modes for the persistence volume
+  accessModes:
+    - ReadWriteOnce
+  ## The size of the volume to use
+  size: 10Gi
 
 monitoring:
   enabled: false
