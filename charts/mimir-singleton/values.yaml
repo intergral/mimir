@@ -48,10 +48,6 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
-service:
-  type: ClusterIP
-  port: 9009
-
 ingress:
   enabled: false
   className: ""
@@ -142,7 +138,6 @@ config:
       native_histograms_ingestion_enabled: true
   
     server:
-      http_listen_port: 9009
       log_level: error
   
     ruler_storage:
@@ -198,7 +193,10 @@ config:
       enable_api: true
       alertmanager_url: http://localhost:9009/alertmanager/
 
-  structuredConfig: {}
+  structuredConfig:
+    server:
+      grpc_listen_port: 9095
+      http_listen_port: 8080
 
 ## The configuration for mimir overrides module
 overrides:

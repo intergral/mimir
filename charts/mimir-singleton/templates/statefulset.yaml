@@ -48,7 +48,10 @@ spec:
           name: mimir
           ports:
             - name: http
-              containerPort: {{ .Values.service.port }}
+              containerPort: {{ include "mimir-singleton.serverHttpListenPort" . }}
+              protocol: TCP
+            - name: grpc
+              containerPort: {{ include "mimir-singleton.serverGrpcListenPort" . }}
               protocol: TCP
           livenessProbe:
             httpGet:

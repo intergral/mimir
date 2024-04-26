@@ -85,3 +85,17 @@ configMap:
     - key: "overrides.yaml"
       path: "overrides.yaml"
 {{- end -}}
+
+{{/*
+Internal servers http listen port - derived from Mimir default
+*/}}
+{{- define "mimir-singleton.serverHttpListenPort" -}}
+{{ (((.Values.config).structuredConfig).server).http_listen_port | default "8080" }}
+{{- end -}}
+
+{{/*
+Internal servers grpc listen port - derived from Mimir default
+*/}}
+{{- define "mimir-singleton.serverGrpcListenPort" -}}
+{{ (((.Values.config).structuredConfig).server).grpc_listen_port | default "9095" }}
+{{- end -}}

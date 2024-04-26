@@ -5,11 +5,15 @@ metadata:
   labels:
     {{- include "mimir-singleton.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.service.type }}
+  type: ClusterIP
   ports:
-    - port: {{ .Values.service.port }}
+    - port: {{ include "mimir-singleton.serverHttpListenPort" . }}
       targetPort: http
       protocol: TCP
       name: http
+    - port: {{ include "mimir-singleton.serverGrpcListenPort" . }}
+      targetPort: grpc
+      protocol: TCP
+      name: grpc
   selector:
     {{- include "mimir-singleton.selectorLabels" . | nindent 4 }}
