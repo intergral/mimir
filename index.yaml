@@ -3,6 +3,16 @@ entries:
   mimir-singleton:
   - apiVersion: v2
     appVersion: 2.10.3
+    created: "2024-05-01T20:04:06.417826653Z"
+    description: A Helm chart for Kubernetes
+    digest: c20cdfb438258552538051c8df21d8a70be0cf3cf9befb107dc134176f0491d1
+    name: mimir-singleton
+    type: application
+    urls:
+    - https://github.com/intergral/mimir-singleton-helm/releases/download/mimir-singleton-0.2.2/mimir-singleton-0.2.2.tgz
+    version: 0.2.2
+  - apiVersion: v2
+    appVersion: 2.10.3
     created: "2024-04-26T20:02:31.750238606Z"
     description: A Helm chart for Kubernetes
     digest: 7cfd2e44ffd3f617c856f68afdf433de5d3b2eb786e6d95882178fb8cf703b20
@@ -51,4 +61,4 @@ entries:
     urls:
     - https://github.com/intergral/mimir-singleton-helm/releases/download/mimir-singleton-0.1.3/mimir-singleton-0.1.3.tgz
     version: 0.1.3
-generated: "2024-04-26T20:02:31.750312905Z"
+generated: "2024-05-01T20:04:06.417857822Z"
